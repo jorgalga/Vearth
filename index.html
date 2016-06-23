@@ -70,7 +70,7 @@
 </head>
 
 <body>
-    <div id="icon"></div>>
+    <div id="icon"></div>
 
 </body>
 
@@ -182,6 +182,11 @@ var xmlhttp = new XMLHttpRequest();
     
     var numimages=6;
     var imagesloaded=0;
+    var collidableMeshList = [];
+    var boom = false;
+
+    
+    
 
     
     // Setup three.js WebGL renderer. Note: Antialiasing is a big performance hit.
@@ -197,8 +202,7 @@ var xmlhttp = new XMLHttpRequest();
     // Create a three.js scene.
     var scene = new THREE.Scene();
     
-    //CSS3D Scene
-    scene2 = new THREE.Scene();
+    
 
     // Create a three.js camera.
     var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 10000);
@@ -276,6 +280,7 @@ var xmlhttp = new XMLHttpRequest();
     earthMesh.add(moon);
     /*Adding earth to scene*/
     scene.add(earthMesh);
+    collidableMeshList.push(earthMesh);
 
     var skygeometry = new THREE.SphereGeometry(90, 50, 50);
     var skymaterial= new THREE.MeshPhongMaterial({
@@ -294,6 +299,13 @@ var xmlhttp = new XMLHttpRequest();
 
     var light2 = new THREE.AmbientLight(0xffffff, 1.6); // soft white light
     scene.add(light2);
+    
+    /**/
+    var cubeGeometry = new THREE.CubeGeometry(0.01,0.01,0.01,1,1,1);
+	var wireMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe:true } );
+	var Player = new THREE.Mesh( cubeGeometry, wireMaterial );
+	Player.position.set(0, controls.userHeight - 0.25, -0.25);
+	scene.add( Player );
 
   
     // For high end VR devices like Vive and Oculus, take into account the stage
@@ -312,6 +324,32 @@ var xmlhttp = new XMLHttpRequest();
     // Request animation frame loop function
     var lastRender = 0;
     var cTime = 0;
+    
+   $(window).keypress(function (e) {
+      if (e.keyCode === 0 || e.keyCode === 32) {
+        e.preventDefault()
+        console.log('FIRE!!!');
+        boom = true;  
+        Player.position.z = 0;  
+        shot();
+      }
+    })
+   
+   function shot(){
+        
+        setTimeout(function(){ 
+            if(boom == false){
+                  
+            }
+            else{
+                Player.position.z -= 0.001;
+                
+                shot();
+            }
+        }, 50);
+    }
+   
+   
     
     function waitImages(){
         
@@ -337,6 +375,9 @@ var xmlhttp = new XMLHttpRequest();
         cloudMesh.rotation.y += delta * 0.000005;
 
         //First of all we create a matrix and put the rotation of the cube into it
+        
+        
+        collisionEval();
 
         // Update VR headset position and apply to camera.
         controls.update();
@@ -384,6 +425,30 @@ var xmlhttp = new XMLHttpRequest();
         // Place the cube in the middle of the scene, at user height.
         cube.position.set(0, controls.userHeight, 0);
     }
+    
+    function collisionEval(){
+        
+        for (var vertexIndex = 0; vertexIndex < Player.geometry.vertices.length; vertexIndex++)
+        {      
+            var localVertex = Player.geometry.vertices[vertexIndex].clone();
+            var globalVertex = Player.matrix.multiplyVector3(localVertex);
+            var directionVector = globalVertex.sub( Player.position );
+
+            var ray = new THREE.Raycaster( Player.position, directionVector.clone().normalize() );
+            var intersects = ray.intersectObjects( collidableMeshList );
+            
+         
+            if ( intersects.length > 0 && intersects[0].distance < directionVector.length() ) 
+            {
+                // a collision occurred... do something...
+                console.log("colision");
+            }
+            
+        }
+        
+        
+    }
+    
 </script>
 
 </html>
