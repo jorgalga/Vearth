@@ -304,7 +304,7 @@ var xmlhttp = new XMLHttpRequest();
     var cubeGeometry = new THREE.CubeGeometry(0.01,0.01,0.01,1,1,1);
 	var wireMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe:true } );
 	var Player = new THREE.Mesh( cubeGeometry, wireMaterial );
-	Player.position.set(0, controls.userHeight - 0.25, -0.25);
+	Player.position.set(0, controls.userHeight - 0.25, 0);
 	scene.add( Player );
 
   
@@ -342,7 +342,7 @@ var xmlhttp = new XMLHttpRequest();
                   
             }
             else{
-                Player.position.z -= 0.001;
+                Player.position.z -= 0.005;
                 
                 shot();
             }
@@ -360,7 +360,7 @@ var xmlhttp = new XMLHttpRequest();
             else{
                 waitImages();
             }
-        }, 50);
+        }, 25);
     }
 
     function animate(timestamp) {
@@ -376,9 +376,14 @@ var xmlhttp = new XMLHttpRequest();
 
         //First of all we create a matrix and put the rotation of the cube into it
         
+        if(boom){
+            collisionEval();
+            
+            
+            
+        }
+     
         
-        collisionEval();
-
         // Update VR headset position and apply to camera.
         controls.update();
 
@@ -428,11 +433,15 @@ var xmlhttp = new XMLHttpRequest();
     
     function collisionEval(){
         
+        
         for (var vertexIndex = 0; vertexIndex < Player.geometry.vertices.length; vertexIndex++)
         {      
             var localVertex = Player.geometry.vertices[vertexIndex].clone();
-            var globalVertex = Player.matrix.multiplyVector3(localVertex);
-            var directionVector = globalVertex.sub( Player.position );
+            
+            localVertex.applyMatrix4( Player.matrixWorld );
+            
+            //var globalVertex = Player.matrix.multiplyVector3(localVertex);
+            var directionVector = localVertex.sub( Player.position );
 
             var ray = new THREE.Raycaster( Player.position, directionVector.clone().normalize() );
             var intersects = ray.intersectObjects( collidableMeshList );
@@ -442,12 +451,20 @@ var xmlhttp = new XMLHttpRequest();
             {
                 // a collision occurred... do something...
                 console.log("colision");
+                
+                boom = false;
+                Player.position.z = 0;
+                return;
             }
             
-        }
-        
-        
+        }    
     }
+    
+    
+    
+    
+    
+    
     
 </script>
 
