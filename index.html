@@ -19,10 +19,19 @@
             padding: 0;
             overflow: hidden;
         }
+        #icon{
+            position: absolute;
+            background-color: blue;
+            top: 0;
+            left: 0;
+            width: 50px;
+            height: 50px;
+        }
     </style>
 </head>
 
 <body>
+    <div id="icon"></div>>
 
 </body>
 
@@ -62,7 +71,7 @@
         //DIRTY_SUBMIT_FRAME_BINDINGS: true // default: false
     };
 </script>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
 <!--
   A polyfill for Promises. Needed for IE and Edge.
   -->
@@ -95,6 +104,16 @@
 
 
 <script>
+    // A $( document ).ready() block.
+    $( document ).ready(function() {
+        
+var xmlhttp = new XMLHttpRequest();
+        var url = "http://jorgalga.com/api/get_recent_posts/";
+        xmlhttp.open("GET", url, true);
+        xmlhttp.send();
+
+    });
+    
     // Setup three.js WebGL renderer. Note: Antialiasing is a big performance hit.
     // Only enable it if you actually need to.
     var renderer = new THREE.WebGLRenderer({
@@ -109,7 +128,7 @@
     var scene = new THREE.Scene();
 
     // Create a three.js camera.
-    var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+    var camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 10000);
 
     // Apply VR headset positional data to camera.
     var controls = new THREE.VRControls(camera);
@@ -120,32 +139,7 @@
     effect.setSize(window.innerWidth, window.innerHeight);
 
 
-    // Add a repeating grid as a skybox.
-    var boxSize = 6;
-    var loader = new THREE.TextureLoader();
-    loader.load('img/box.png', onTextureLoaded);
 
-    function onTextureLoaded(texture) {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(boxSize, boxSize);
-
-        var geometry = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
-        var material = new THREE.MeshBasicMaterial({
-            map: texture,
-            color: 0x01BE00,
-            side: THREE.BackSide
-        });
-
-        // Align the skybox to the floor (which is at y=0).
-        skybox = new THREE.Mesh(geometry, material);
-        skybox.position.y = boxSize / 2;
-        //scene.add(skybox);
-
-        // For high end VR devices like Vive and Oculus, take into account the stage
-        // parameters provided.
-        setupStage();
-    }
 
 
     // Create a VR manager helper to enter and exit VR mode.
@@ -167,70 +161,60 @@
     //scene.add(cube);
 
     /*Earth creation*/
+    var moon = new THREE.Mesh();
+ 
+    
+    /*Earth Geometry*/
+    var earthgeometry = new THREE.SphereGeometry(0.5, 32, 32);
+    var earthmaterial = new THREE.MeshPhongMaterial({
+        
+        map: new THREE.TextureLoader().load('img/earth.jpg'),
+        bumpMap: new THREE.TextureLoader().load("img/elev_bump_4k.jpg"),
+        bumpScale: 0.005,
+        specularMap: new THREE.TextureLoader().load("img/specular4k.jpg"),
+        specular:  new THREE.Color('grey')
+    });
+    var earthMesh = new THREE.Mesh(earthgeometry, earthmaterial);
+    // Position cube mesh to be right in front of you.
+    //earthMesh.position.set(0, controls.userHeight, -1); 
+    earthMesh.position.set(0, controls.userHeight - 0.25, -1);
 
-    var earthMesh = new THREE.Mesh();
-    var cloudMesh = new THREE.Mesh();
-    var earthmaterial;
-    var loader = new THREE.TextureLoader();
-    loader.load('img/earth.jpg', onTextureLoaded2);
+    /*Clouds*/
+    var cloudgeo = new THREE.SphereGeometry(0.51, 50, 50);
+    var cloudmat = new THREE.MeshPhongMaterial({
+        map: new THREE.TextureLoader().load("img/europe_clouds_4k.jpg"),
+        side: THREE.DoubleSide,
+        opacity: 0.3,
+        transparent: true,
+        depthWrite: false,
+    });
+    var cloudMesh = new THREE.Mesh(cloudgeo, cloudmat);
+    /*Moon*/
+    var moongeo = new THREE.SphereGeometry(0.13, 50, 50);
+    var moonmat = new THREE.MeshPhongMaterial({
+        map: new THREE.TextureLoader().load('img/moon.jpg'),
+    });
+    var moon = new THREE.Mesh(moongeo, moonmat);
+    moon.position.set(0, controls.userHeight - 0.25, 29);
+    
+    
+    /*Earth children*/
+    earthMesh.add(cloudMesh);
+    earthMesh.add(moon);
+    /*Adding earth to scene*/
+    scene.add(earthMesh);
 
-    function onTextureLoaded2(texture) {
-
-        var mapHeight = new THREE.TextureLoader().load("img/elev_bump_4k.jpg");
-        var spec = new THREE.TextureLoader().load("img/specular4k.jpg");
-
-        var geometry = new THREE.SphereGeometry(0.5, 32, 32);
-        var scolor = new THREE.Color('grey');
-
-        var material = new THREE.MeshPhongMaterial({
-            map: texture,
-            bumpMap: mapHeight,
-            bumpScale: 0.005,
-            specularMap: spec,
-            specular: scolor
-        });
-
-
-        earthMesh = new THREE.Mesh(geometry, material);
-        // Position cube mesh to be right in front of you.
-        //earthMesh.position.set(0, controls.userHeight, -1); 
-        earthMesh.position.set(0, controls.userHeight - 0.25, -1);
-
-
-        /*Clouds*/
-        var geometry3 = new THREE.SphereGeometry(0.51, 50, 50);
-        var material3 = new THREE.MeshPhongMaterial({
-            map: new THREE.TextureLoader().load("img/europe_clouds_4k.jpg"),
-            side: THREE.DoubleSide,
-            opacity: 0.3,
-            transparent: true,
-            depthWrite: false,
-        })
-        cloudMesh = new THREE.Mesh(geometry3, material3);
-        earthMesh.add(cloudMesh);
-
-
-        scene.add(earthMesh);
-    }
-
-    /*Skystars*/
-    var loader = new THREE.TextureLoader();
-    loader.load('img/skystars.jpg', onTextureLoaded3);
-
-    function onTextureLoaded3(texture) {
-        var geometry = new THREE.SphereGeometry(90, 32, 32);
-        // create the material, using a texture of startfield
-        var material = new THREE.MeshBasicMaterial();
-        material.map = texture;
-        material.side = THREE.BackSide;
-        // create the mesh based on geometry and material
-        var mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
-
-    }
+    var skygeometry = new THREE.SphereGeometry(90, 50, 50);
+    var skymaterial= new THREE.MeshPhongMaterial({
+        map: new THREE.TextureLoader().load("img/skystars.jpg"),
+        side: THREE.DoubleSide
+    });
+    var skystars = new THREE.Mesh(skygeometry, skymaterial);
+    skystars.position.set(0, controls.userHeight - 0.25, -1);
+    scene.add(skystars);
 
 
-
+    /*Ilumination of the scene*/
 
     var light = new THREE.DirectionalLight(0xffffff, 0.2);
     light.position.set(0, 0, 1).normalize();
@@ -239,9 +223,10 @@
     var light2 = new THREE.AmbientLight(0xffffff, 1.6); // soft white light
     scene.add(light2);
 
-    console.log(earthMesh);
-
-
+  
+    // For high end VR devices like Vive and Oculus, take into account the stage
+    // parameters provided.
+    setupStage();
 
 
     // Kick off animation loop
