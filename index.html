@@ -19,14 +19,7 @@
             padding: 0;
             overflow: hidden;
         }
-        #icon{
-            position: absolute;
-            background-color: blue;
-            top: 0;
-            left: 0;
-            width: 50px;
-            height: 50px;
-        }
+        
         
         .element {
 				width: 120px;
@@ -65,15 +58,148 @@
 					font-size: 12px;
 					color: rgba(127,255,255,0.75);
 				}
+        #myimage{
+            position: absolute;
+            
+            
+        }
         
     </style>
+ 
+
 </head>
 
 <body>
+<div id="inputArea"> 
+<img id="myimage" crossOrigin="Anonymous"  src="https://lh4.googleusercontent.com/-u07YT6uCRm8/AAAAAAAAAAI/AAAAAAAAAAs/9j_0CL1Inkk/s96-c/photo.jpg">    
+Select a file to upload:
+<input type="file" id="myFile">
+
+<p>Click the button below to find out which type of form element the FileUpload
+object is.</p>
+
+<button onclick="myFunction()">Try it</button>
+
+<p id="demo"></p>
+</div>   
     <div id="icon"></div>
 
 </body>
 
+    
+<script>
+    
+   
+    
+document.getElementById("myFile").onchange = function(event) {
+    var fileList = document.getElementById.files;
+    //TODO do something with fileList.  
+    
+    
+    var DOM_img = document.createElement("img");
+    DOM_img.src ="";
+    
+    var file = this.files[0];
+    //var file = new File("http://fiddle.jshell.net/img/logo.png");
+
+    
+    console.log(file);
+    
+    var reader  = new FileReader();
+    
+    var typef = this.files[0].type.split("/")[this.files[0].type.split("/").length-1];
+    
+    var storageRef = firebase.storage().ref();
+    var metadata = {
+        contentType: this.files[0].type
+    };
+    
+    //http://fiddle.jshell.net/img/logo.png
+
+    reader.addEventListener("load", function () {
+        DOM_img.src = reader.result;
+        
+        
+        document.getElementById("inputArea").appendChild(DOM_img);
+        
+          
+        var  uploadTask = storageRef.child('images/' + 'image-'+new Date().getTime()+'.'+typef).put(file, metadata);  
+        
+            //console.log(uploadTask.snapshot);
+
+                    // Listen for state changes, errors, and completion of the upload.
+                    uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+                      function(snapshot) {
+                        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                        var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log('Upload is ' + progress + '% done');
+                        switch (snapshot.state) {
+                          case firebase.storage.TaskState.PAUSED: // or 'paused'
+                            console.log('Upload is paused');
+                            break;
+                          case firebase.storage.TaskState.RUNNING: // or 'running'
+                            console.log('Upload is running');
+                            break;
+                        }
+                      }, function(error) {
+                      switch (error.code) {
+                        case 'storage/unauthorized':
+                          // User doesn't have permission to access the object
+                          break;
+
+                        case 'storage/canceled':
+                          // User canceled the upload
+                          break;
+
+                        case 'storage/unknown':
+                          // Unknown error occurred, inspect error.serverResponse
+                          break;
+                      }
+                    }, function() {
+                      // Upload completed successfully, now we can get the download URL
+                      var downloadURL = uploadTask.snapshot.downloadURL;
+                        alert("done");
+                    });
+          
+          
+          
+      }, false);
+
+      if (file) {
+        reader.readAsDataURL(file);
+      }
+    
+        
+    
+};
+function myFunction() {
+    
+     
+    
+}
+</script>    
+    
+<!-- ---------------- Custom Shader Code ------------------------ -->
+<script id="vertexShader" type="x-shader/x-vertex">
+varying vec3 vNormal;
+void main() 
+{
+    vNormal = normalize( normalMatrix * normal );
+    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+}
+</script>
+
+<!-- fragment shader a.k.a. pixel shader -->
+<script id="fragmentShader" type="x-shader/x-vertex"> 
+varying vec3 vNormal;
+void main() 
+{
+	float intensity = pow( 0.7 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 4.0 ); 
+    gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ) * intensity;
+}
+</script>
+<!-- ----------------------------------------------------------- -->
+    
 <script>
     /*
      * Debug parameters.
@@ -111,6 +237,7 @@
     };
 </script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.5/TweenMax.min.js"></script>
 <!--
   A polyfill for Promises. Needed for IE and Edge.
   -->
@@ -143,6 +270,81 @@
 
 
 <script>
+  $("#myimage").click(function() {
+    var image = document.getElementById('myimage');
+    
+    var imgBlob = base64img(image);
+    
+    var blob = getblobfrom64(imgBlob);
+  
+    
+      
+    
+    var storageRef = firebase.storage().ref();
+    var metadata = {
+      contentType: "image/png"
+    };
+    
+    var  uploadTask = storageRef.child('images/' + 'image-'+new Date().getTime()+'.png').put(blob, metadata);  
+   uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+  function(snapshot) {
+    // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+    var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+    console.log('Upload is ' + progress + '% done');
+    switch (snapshot.state) {
+      case firebase.storage.TaskState.PAUSED: // or 'paused'
+        console.log('Upload is paused');
+        break;
+      case firebase.storage.TaskState.RUNNING: // or 'running'
+        console.log('Upload is running');
+        break;
+    }
+  }, function(error) {
+  switch (error.code) {
+    case 'storage/unauthorized':
+      // User doesn't have permission to access the object
+      break;
+
+    case 'storage/canceled':
+      // User canceled the upload
+      break;
+
+
+
+    case 'storage/unknown':
+      // Unknown error occurred, inspect error.serverResponse
+      break;
+  }
+}, function() {
+  // Upload completed successfully, now we can get the download URL
+  var downloadURL = uploadTask.snapshot.downloadURL;
+});
+      
+  });
+    
+function base64img(i){
+   
+    var canvas = document.createElement('canvas');
+    canvas.width = i.width;
+    canvas.height = i.height;
+    var context = canvas.getContext("2d");
+    context.drawImage(i, 0, 0);    
+       
+    var blob = canvas.toDataURL("image/png");
+    return blob.replace(/^data:image\/(png|jpg);base64,/, "");
+     
+}
+function getblobfrom64(imgBlob){ 
+    var byteCharacters = atob(imgBlob);
+    var byteNumbers = new Array(byteCharacters.length);
+    for (var i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    var byteArray = new Uint8Array(byteNumbers);
+    var blob = new Blob([byteArray], {type:  "image/png"});      
+    return blob;
+}
+    
     // A $( document ).ready() block.
     $( document ).ready(function() {
         
@@ -153,6 +355,8 @@ var xmlhttp = new XMLHttpRequest();
     
     
         $('#icon').on('click', function(){
+            
+         
             // la variable ajaxurl debe estar definida y apuntar a wp-admin/admin-ajax.php
             // en la data enviada con la petición, el parámetro "action" debe coincidir con la detección de la acción en PHP
             $.get( ajaxurl, {
@@ -184,7 +388,9 @@ var xmlhttp = new XMLHttpRequest();
     var imagesloaded=0;
     var collidableMeshList = [];
     var boom = false;
-
+    var canRotate = false;
+    var cube;
+    var planeimg;
     
     
 
@@ -229,7 +435,8 @@ var xmlhttp = new XMLHttpRequest();
     // Create 3D objects.
     var geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
     var material = new THREE.MeshNormalMaterial();
-    var cube = new THREE.Mesh(geometry, material);
+    cube = new THREE.Mesh(geometry, material);
+    cube = new THREE.Mesh(geometry, material);
 
     // Position cube mesh to be right in front of you.
     cube.position.set(0, controls.userHeight, -1);
@@ -274,10 +481,25 @@ var xmlhttp = new XMLHttpRequest();
     var moon = new THREE.Mesh(moongeo, moonmat);
     moon.position.set(0, controls.userHeight - 0.25, 29);
     
+    // Create 3D objects.
+                var geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+                var material = new THREE.MeshNormalMaterial();
+                var cube = new THREE.Mesh(geometry, material);
+    
+    var imggeo = new THREE.PlaneGeometry(0.1, 0.1);
+    var imgmat = new THREE.MeshPhongMaterial({side:THREE.DoubleSide});
+    planeimg = new THREE.Mesh(imggeo,imgmat);
+    
+    //Glow
+  
+    
+    
     
     /*Earth children*/
     earthMesh.add(cloudMesh);
     earthMesh.add(moon);
+    earthMesh.add(cube);
+    earthMesh.add(planeimg);
     /*Adding earth to scene*/
     scene.add(earthMesh);
     collidableMeshList.push(earthMesh);
@@ -370,10 +592,11 @@ var xmlhttp = new XMLHttpRequest();
         cTime = timestamp;
 
         // Apply rotation to cube mesh
-        cube.rotation.y += delta * 0.0006;
-        earthMesh.rotation.y += delta * 0.00005;
-        cloudMesh.rotation.y += delta * 0.000005;
-
+        if(canRotate == true){
+            cube.rotation.y += delta * 0.006;
+            earthMesh.rotation.y += delta * 0.00015;
+            cloudMesh.rotation.y += delta * 0.000005;
+        }
         //First of all we create a matrix and put the rotation of the cube into it
         
         if(boom){
@@ -382,7 +605,8 @@ var xmlhttp = new XMLHttpRequest();
             
             
         }
-     
+        
+        
         
         // Update VR headset position and apply to camera.
         controls.update();
@@ -459,13 +683,182 @@ var xmlhttp = new XMLHttpRequest();
             
         }    
     }
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/live/3.0/firebase.js"></script>
+<script>
+    // Initialize Firebase
+    var config = {
+        apiKey: "AIzaSyAiC_oKqqGZpwS90gvdeMp6NRngEaZJfpU",
+        authDomain: "mytestproyect-fc1ea.firebaseapp.com",
+        databaseURL: "https://mytestproyect-fc1ea.firebaseio.com",
+        storageBucket: "mytestproyect-fc1ea.appspot.com",
+    };
+    firebase.initializeApp(config);
+
+
+    var provider = new firebase.auth.GoogleAuthProvider();
+
+    firebase.auth().signInWithPopup(provider).then(function (result) {
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        var token = result.credential.accessToken;
+        // The signed-in user info.
+        var user = result.user;
+        console.log(user);
+        writeUserData(user.uid, "Paco", user.email );
+        if ("geolocation" in navigator) {
+            /* geolocation is available */
+            navigator.geolocation.getCurrentPosition(function(position) {
+                //console.log(position.coords.latitude, position.coords.longitude);
+                writeUserPosition(user.uid, position.coords.latitude, position.coords.longitude );
+                var userMesh = Eposition( position.coords.latitude, position.coords.longitude,0.5);
+                
+                
+                // Position cube mesh to be right in front of you.
+                cube.position.set(userMesh[0], userMesh[1] , userMesh[2] );
+                planeimg.position.set(userMesh[0], userMesh[1] + 0.05 , userMesh[2] );
+                //var tex =  THREE.TextureLoader().load( user.photoURL );
+                
+                THREE.ImageUtils.crossOrigin = '';
+                var tex = THREE.ImageUtils.loadTexture(user.photoURL);
+                console.log(user.photoURL);
+                
+                // Create a root reference
+                var storageRef = firebase.storage().ref();
+                
+              
+                /*
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', "http://fiddle.jshell.net/img/logo.png", true);
+                xhr.responseType = 'arraybuffer';
+                var myBlob;
+                 var uploadTask;
+                xhr.onload = function(e) {
+                    var arrayBufferView = new Uint8Array( this.response );
+                    myBlob= new Blob( [ arrayBufferView ], { type: "image/png" } );
+                    
+                    // Create the file metadata
+                    var metadata = {
+                      contentType: 'image/png'
+                    };
+                    
+                    uploadTask = storageRef.child('images/' + 'logo.png').put(myBlob, metadata);
+                    // Listen for state changes, errors, and completion of the upload.
+                    uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+                      function(snapshot) {
+                        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                        var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log('Upload is ' + progress + '% done');
+                        switch (snapshot.state) {
+                          case firebase.storage.TaskState.PAUSED: // or 'paused'
+                            console.log('Upload is paused');
+                            break;
+                          case firebase.storage.TaskState.RUNNING: // or 'running'
+                            console.log('Upload is running');
+                            break;
+                        }
+                      }, function(error) {
+                      switch (error.code) {
+                        case 'storage/unauthorized':
+                          // User doesn't have permission to access the object
+                          break;
+
+                        case 'storage/canceled':
+                          // User canceled the upload
+                          break;
+
+                        case 'storage/unknown':
+                          // Unknown error occurred, inspect error.serverResponse
+                          break;
+                      }
+                    }, function() {
+                      // Upload completed successfully, now we can get the download URL
+                      var downloadURL = uploadTask.snapshot.downloadURL;
+                        alert("done");
+                    });
+       
+                    
+                    
+                    
+                };
+                xhr.send();
+
+                */
+                
+                
+
+               
+                
+         
+
+             
+                
+                tex.generateMipmaps = false;
+                tex.minFilter = THREE.LinearFilter;
+                tex.magFilter = THREE.LinearFilter;
+                //console.log( user.photoURL);
+                planeimg.material.map = tex;
+                planeimg.material.needsUpdate = true;
+                
+             
+                planeimg.rotation.y = Math.PI/2;
+                
+                
+                
+               
+                canRotate = true;
+            });
+        } else {
+          /* geolocation IS NOT available */
+              console.log("NOT available");
+        }
+       
+        // ...
+    }).catch(function (error) {
+        // Handle Errors here.
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        // The email of the user's account used.
+        var email = error.email;
+        // The firebase.auth.AuthCredential type that was used.
+        var credential = error.credential;
+        // ...
+    });
+   
     
+    var commentsRef = firebase.database().ref('users/');
+        commentsRef.on('child_changed', function(data) {
+        //console.log(data.val());
+    });
+
     
+
+    function writeUserData(userId, name, email) {
+      firebase.database().ref('users/' + userId).set({
+        username: name,
+        email: email
+      });
+    }
+    function writeUserPosition(userId, lat, lon) {
+      firebase.database().ref('users/' + userId).update({
+        latitude: lat,
+        longitude: lon
+      });
+    }
     
-    
-    
+    function Eposition( lat,lon,radius ) {
+        var phi   = (90-lat)*(Math.PI/180);
+        var theta = (lon+180)*(Math.PI/180);
+        var x = -((radius) * Math.sin(phi)*Math.cos(theta));
+        var z = ((radius) * Math.sin(phi)*Math.sin(theta));
+        var y = ((radius) * Math.cos(phi));
+
+        return [x,y,z];
+    }
     
     
 </script>
+        
+    
 
 </html>
